@@ -11,8 +11,15 @@ Data_dir = '/home/ubuntu/Test_Capstone/Data/'
 # function to copy and append subsets to main data frame
 def append_df_to_excel(df, FILE_NAME):
     df_excel = pd.read_excel(FILE_NAME)
-    result = pd.concat([df_excel, df], ignore_index=True)
-    result.to_excel(FILE_NAME, index=False)
+    result = pd.concat([df_excel, df])
+    result.to_excel(FILE_NAME)
+
+# function to isolate necessary columns
+def shuffle_excel(FILE_NAME):
+    df_excel = pd.read_excel(FILE_NAME)
+    df_main = df_excel.sample(frac=1).reset_index(drop=True)
+    df_main = df_main[['Image Index', 'Finding Labels']]
+    df_main.to_excel(FILE_NAME)
 
 # function to rotate image
 def rot_img(img):
@@ -68,7 +75,7 @@ append_df_to_excel(df_main_Pleural_Thickening,FILE_NAME)
 
 append_df_to_excel(df_main_Cardiomegaly,FILE_NAME)
 
-
+shuffle_excel(FILE_NAME)
 
 
 
