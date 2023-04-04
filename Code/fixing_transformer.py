@@ -1,4 +1,5 @@
 # The following requires torch v0.12+ and torchvision v0.13+
+
 import torch
 import torchvision
 from torchinfo import summary
@@ -27,7 +28,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 
-model = timm.create_model('vit_base_patch16_224', pretrained=True).to(device)
+model = timm.create_model('vit_base_patch32_224', pretrained=True).to(device)
 #custom_model = VisionTransformer()
 #custom_model.to(device)
 # Update positional embeddings
@@ -35,7 +36,8 @@ weights = model.patch_embed.proj.weight
 new_weights = weights[:, :1, ...]
 model.patch_embed.proj.weight = torch.nn.Parameter(new_weights)
 
-# Update positional embeddings
+#num_layers = 15
+#model.blocks = nn.Sequential(*list(model.blocks.children())[:num_layers])
 
 
 # 3. Freeze the base parameters
@@ -216,7 +218,7 @@ plot_loss_curves(pretrained_vit_results)
 
 #-----------------------------------------------------------------------------------------------------------------------
 
-pred_transforms=torchvision.transforms.Compose([
+'''pred_transforms=torchvision.transforms.Compose([
     torchvision.transforms.Grayscale(num_output_channels=1),
     torchvision.transforms.Resize(256),
     torchvision.transforms.CenterCrop(224)])
@@ -225,5 +227,74 @@ predictions = pred_and_plot_image(model=model,
                             image_path=test_dir + 'Mass/00030594_000.png',
                             class_names=class_names,
                             transform=pred_transforms,
-                            device=device)
+                            device=device)'''
 
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+from captum.attr import IntegratedGradients
+from captum.attr import visualization as viz
+from matplotlib.colors import LinearSegmentedColormap
+import numpy as np
+
+
+classes_dict = {'Atelectasis':0,'Cardiomegaly':1,'Consolidation':2,'Effusion':3, 'Infiltration':4,'Mass':5,'No Finding':6,'Nodule':7,'Pleural_Thickening':8,'Pneumothorax':9}
+
+
+ig_transform = torchvision.transforms.Compose([
+    torchvision.transforms.Grayscale(num_output_channels=1),
+    torchvision.transforms.Resize(256),
+    torchvision.transforms.CenterCrop(224),
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize(mean=[0.485],std=[0.229]),
+    lambda x: x.unsqueeze(0)])  # add batch dimension
+
+image = Image.open(test_dir + 'Mass/00030594_000.png')
+outputs = ig_transform(image).to(device)
+print(outputs.shape)
+ig = IntegratedGradients(model)
+target_class = 5
+attributions = ig.attribute(outputs, target=target_class, n_steps=80)
+print(attributions)
+
+
+attr = attributions.squeeze().unsqueeze(2).cpu().detach().numpy() # returns a [224, 224, 1] numpy array
+
+
+_ = viz.visualize_image_attr(None, ig_transform(image).squeeze(0).cpu().permute(1, 2, 0).squeeze().detach().numpy(),
+                      method="original_image", title="Original Image")
+
+
+default_cmap = LinearSegmentedColormap.from_list('custom blue',
+                                                 [(0, '#ffffff'),
+                                                  (0.25, '#0000ff'),
+                                                  (1, '#0000ff')], N=224)
+
+_ = viz.visualize_image_attr(attr,
+                             ig_transform(image).squeeze(0).cpu().permute(1, 2, 0).squeeze().detach().numpy(),
+                             method='heat_map',
+                             cmap=default_cmap,
+                             show_colorbar=True,
+                             sign='positive',
+                             title='Integrated Gradients')
+
+
+
+
+
+
+
+'''import matplotlib.pyplot as plt
+plt.imshow(attributions.squeeze(0).cpu().permute(1,2,0).squeeze().detach().numpy(), cmap='gray')
+
+
+'''
