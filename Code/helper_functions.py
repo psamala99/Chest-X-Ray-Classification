@@ -157,6 +157,7 @@ def plot_loss_curves(results):
     plt.xlabel("Epochs")
     plt.legend()
 
+
     # Plot accuracy
     plt.subplot(1, 2, 2)
     plt.plot(epochs, accuracy, label="train_accuracy")
@@ -164,6 +165,7 @@ def plot_loss_curves(results):
     plt.title("Accuracy")
     plt.xlabel("Epochs")
     plt.legend()
+    plt.savefig("MLP-Mixer Head with Augmentation") #<-added
 
 
 # Pred and plot image function from notebook 04
@@ -198,7 +200,7 @@ def pred_and_plot_image(
                             transform=torchvision.transforms.ToTensor(),
                             device=device)
     """
-
+    plt.figure(figsize=(10, 7))
     # 1. Load in image and convert the tensor values to float32
     target_image = torchvision.io.read_image(str(image_path)).type(torch.float32)
 
@@ -229,14 +231,17 @@ def pred_and_plot_image(
 
     # 8. Plot the image alongside the prediction and prediction probability
     plt.imshow(
-        target_image.squeeze().permute(1, 2, 0)
+        target_image.squeeze(0).permute(1, 2, 0).squeeze()
+        #target_image.squeeze().permute(1, 2, 0)
     )  # make sure it's the right size for matplotlib
     if class_names:
         title = f"Pred: {class_names[target_image_pred_label.cpu()]} | Prob: {target_image_pred_probs.max().cpu():.3f}"
     else:
         title = f"Pred: {target_image_pred_label} | Prob: {target_image_pred_probs.max().cpu():.3f}"
+
     plt.title(title)
     plt.axis(False)
+    plt.savefig("Prediction")
 
 
 def set_seeds(seed: int = 42):
