@@ -203,7 +203,7 @@ model.to(device)
 
 
 
-'''pred_transforms=torchvision.transforms.Compose([
+pred_transforms=torchvision.transforms.Compose([
     torchvision.transforms.Grayscale(num_output_channels=1),
     torchvision.transforms.Resize(256),
     torchvision.transforms.CenterCrop(224)])
@@ -214,7 +214,7 @@ predictions = pred_and_plot_image(model=model,
                             image_path='/home/ubuntu/Test_Capstone/Data_Transformer_Combined/Chest-X-ray.png',
                             class_names=class_names,
                             transform=pred_transforms,
-                            device=device)'''
+                            device=device)
 
 
 
